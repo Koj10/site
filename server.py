@@ -1,3 +1,6 @@
+import os
+
+from dotenv import load_dotenv
 from flask import (
     Flask,
     render_template,
@@ -7,6 +10,8 @@ from flask import (
     url_for,
     make_response,
 )
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -83,13 +88,15 @@ def roulette():
 
 def _api_base() -> str:
     """
-    Compute API base from current host.
-    For prod: http://193.176.78.125:5006
-    For local: http://127.0.0.1:5000
+    API origin for browser JS (window.GS_API_BASE).
+    Prefer GS_API_BASE from .env; otherwise derive from request host.
     """
+    explicit = (os.getenv("GS_API_BASE") or "").strip()
+    if explicit:
+        return explicit.rstrip("/")
     host = request.host.split(":")[0].strip() if request.host else "127.0.0.1"
     if host in ("127.0.0.1", "localhost"):
-        return "http://127.0.0.1:5000"
+        return "http://127.0.0.1:5006"
     return f"http://{host}:5006"
 
 
