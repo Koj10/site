@@ -37,11 +37,22 @@ jobs:
 
       - name: Настройка SSH
         if: steps.get-version.outputs.VALID == 'true'
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          if [ -z "${SERVER_IP}" ]; then
+            echo "::error::Секрет SERVER_IP пустой или не задан (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+          if [ -z "${SSH_PRIVATE_KEY}" ]; then
+            echo "::error::Секрет SSH_PRIVATE_KEY пустой или не задан."
+            exit 1
+          fi
+          echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${SERVER_IP}" >> ~/.ssh/known_hosts
 
       - name: Очистка старого .env
         if: steps.get-version.outputs.VALID == 'true'
